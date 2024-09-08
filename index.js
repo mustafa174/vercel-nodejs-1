@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const cors = require("cors"); // Import the cors package
+
 // Middleware to parse JSON bodies
 app.use(express.json());
 
@@ -12,20 +12,9 @@ app.get("/", (req, res) => {
   res.send("Hello, World from MUSTAFA");
 });
 
-// Use CORS middleware
-app.use(cors()); // Allows all origins by default
-
 // Define the /get-data route
 app.get("/get-data", (req, res) => {
-  // Create an array of objects
-  const data = [
-    { id: 1, name: "Item 1", description: "Description of Item 1" },
-    { id: 2, name: "Item 2", description: "Description of Item 2" },
-    { id: 3, name: "Item 3", description: "Description of Item 3" },
-  ];
-
-  // Send the array of objects as JSON
-  res.json(data);
+  res.send("Hello, World from MUSTAFA");
 });
 
 // Define a POST endpoint
