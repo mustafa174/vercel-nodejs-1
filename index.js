@@ -1,12 +1,8 @@
 const express = require("express");
-const cors = require("cors"); // Import the cors package
 const app = express();
-
+const cors = require("cors"); // Import the cors package
 // Middleware to parse JSON bodies
 app.use(express.json());
-
-// Use CORS middleware
-app.use(cors()); // Allows all origins by default
 
 // Define a port
 const port = process.env.PORT || 3000;
@@ -15,6 +11,9 @@ const port = process.env.PORT || 3000;
 app.get("/", (req, res) => {
   res.send("Hello, World from MUSTAFA");
 });
+
+// Use CORS middleware
+app.use(cors()); // Allows all origins by default
 
 // Define the /get-data route
 app.get("/get-data", (req, res) => {
