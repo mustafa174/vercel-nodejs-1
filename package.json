@@ -13,8 +13,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.19.2",
-    "pm2": "^5.4.2"
+    "pm2": "^5.4.2",
+    "vercel": "^37.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
