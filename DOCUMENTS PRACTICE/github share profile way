@@ -1,0 +1,43 @@
+Check if your friend already has SSH keys by navigating to the ~/.ssh/ directory (on Linux/macOS) or %USERPROFILE%\.ssh\ directory (on Windows):
+
+bash
+Copy code
+ls -al ~/.ssh      # Linux/macOS
+
+
+dir %USERPROFILE%\.ssh\  # Windows
+
+
+generate keys 
+
+ssh-keygen -t rsa -b 4096 -C "yourfriend@example.com"
+
+
+Step 5: View the Public Key
+Display the public key using:
+
+bash
+Copy code
+cat ~/.ssh/id_rsa.pub   # Linux/macOS
+type %USERPROFILE%\.ssh\id_rsa.pub  # Windows
+
+
+
+
+d: This indicates that it's a directory.
+rwx: The owner (tk-lpt-0554) has read, write, and execute permissions.
+---: Group and others have no permissions.
+To view the actual SSH keys, you can use the following command:
+
+To view the actual SSH keys, you can use the following command:
+cat ~/.ssh/id_rsa.pub
+
+
+3. Configure Git on Your Machine:
+Open your terminal and configure Git to use your friend's email address for this specific repository. Replace <repository> with the actual repository URL:
+
+bash
+Copy code
+git clone git@github.com:yourfriend/repository.git  # Clone the repository
+cd repository  # Navigate into the repository
+git config user.email "yourfriend@example.com"
