@@ -20,6 +20,7 @@ class UserService {
       const user = new User({
         ...userData,
         password: hashedPassword, // Save the bcrypt-hashed password
+        role: "customer",
       });
 
       await user.save();
@@ -100,7 +101,7 @@ class UserService {
 
       // Generate a JWT token with a 5-hour expiration
       const token = jwt.sign(
-        { id: user._id, email: user.email, name: user.name },
+        { id: user._id, email: user.email, name: user.name, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "5h" } // Set token expiration to 5 hours
       );
@@ -117,6 +118,7 @@ class UserService {
         token: token,
         token_type: "login", // Set token type
         token_expiration: tokenExpirationDate,
+        role: user.role, // Include role in the response if needed
       });
 
       // Save the token in the database
@@ -128,6 +130,7 @@ class UserService {
           id: user._id,
           email: user.email,
           username: user.username,
+          role: user.role, // Include role in the response if needed
         },
         token,
       };

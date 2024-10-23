@@ -7,6 +7,7 @@ const UserTokens = new mongoose.Schema({
   token: { type: String }, // Add token field directly in the user model
   token_type: { type: String }, // Add token field directly in the user model
   token_expiration: { type: Date }, // Optionally store token expiration
+  role: { type: String, enum: ["customer", "admin"], default: "customer" },
 });
 
 export default mongoose.model("UserTokens", UserTokens);
