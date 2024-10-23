@@ -2,6 +2,7 @@ import User from "../models/user.js"; // Import your User model
 import AppError from "../utils/appError.js";
 import bcrypt from "bcrypt"; // Import the crypto package
 import jwt from "jsonwebtoken";
+import UserTokens from "../models/auth.js";
 class UserService {
   // Method to create a new user
   async createUser(userData) {
@@ -76,6 +77,7 @@ class UserService {
   }
 
   // Method to find a user by email
+
   async LoginUser(body) {
     try {
       const { email, password } = body;
@@ -92,14 +94,40 @@ class UserService {
         throw new Error("Incorrect password");
       }
 
-      const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "1h" });
+      // Calculate token expiration date (5 hours from current time to match the JWT)
+      const tokenExpirationDate = new Date();
+      tokenExpirationDate.setHours(tokenExpirationDate.getHours() + 5); // Match the 5h expiration in the JWT
+
+      // Generate a JWT token with a 5-hour expiration
+      const token = jwt.sign(
+        { id: user._id, email: user.email, name: user.name },
+        process.env.JWT_SECRET,
+        { expiresIn: "5h" } // Set token expiration to 5 hours
+      );
+
+      // Delete any previous tokens for this user (optional, if you only allow one active token)
+      await UserTokens.deleteMany({ userId: user._id });
+
+      // Create a new entry in UserTokens
+
+      const userToken = new UserTokens({
+        email: user.email,
+        username: user.name, // Assuming 'username' exists in User schema
+        userId: user._id,
+        token: token,
+        token_type: "login", // Set token type
+        token_expiration: tokenExpirationDate,
+      });
+
+      // Save the token in the database
+      await userToken.save();
 
       // Authentication successful
       return {
         user: {
           id: user._id,
           email: user.email,
-          // Add any other user fields you want to return
+          username: user.username,
         },
         token,
       };
@@ -108,7 +136,6 @@ class UserService {
       throw new Error(error.message);
     }
   }
-
   //
   async findAllUsers(email) {
     try {
