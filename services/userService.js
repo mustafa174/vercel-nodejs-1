@@ -1,7 +1,7 @@
 import User from "../models/user.js"; // Import your User model
 import AppError from "../utils/appError.js";
-import crypto from "crypto"; // Import the crypto package
-
+import bcrypt from "bcrypt"; // Import the crypto package
+import jwt from "jsonwebtoken";
 class UserService {
   // Method to create a new user
   async createUser(userData) {
@@ -12,16 +12,13 @@ class UserService {
         throw new Error("This email is already registered");
       }
 
-      // Hash the password
-      const hashedPassword = crypto
-        .createHash("sha256") // You can use "sha256" or other algorithms
-        .update(userData.password) // Add the password to be hashed
-        .digest("hex"); // Get the hashed output in hexadecimal format
+      // Hash the password using bcrypt with a salt
+      const hashedPassword = await bcrypt.hash(userData.password, 10); // 10 is the salt rounds (cost factor)
 
       // Create a new user instance with the hashed password
       const user = new User({
         ...userData,
-        password: hashedPassword, // Save the hashed password
+        password: hashedPassword, // Save the bcrypt-hashed password
       });
 
       await user.save();
@@ -79,18 +76,44 @@ class UserService {
   }
 
   // Method to find a user by email
-  async findUserByEmail(email) {
+  async LoginUser(body) {
     try {
+      const { email, password } = body;
+
+      // Find the user by email
       const user = await User.findOne({ email });
-      return user; // Return the found user or null
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Compare the provided password with the stored hashed password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new Error("Incorrect password");
+      }
+
+      const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+      // Authentication successful
+      return {
+        user: {
+          id: user._id,
+          email: user.email,
+          // Add any other user fields you want to return
+        },
+        token,
+      };
     } catch (error) {
+      console.log("Error during login:", error.message);
       throw new Error(error.message);
     }
   }
+
+  //
   async findAllUsers(email) {
     try {
       const user = await User.find();
-      console.log(">>> hit inside", user);
+
       return user; // Return the found user or null
     } catch (error) {
       throw new Error(error.message);
