@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 import UserToken from "../models/auth.js";
 
-export const authMiddleware = async (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1]; // Extract token from Authorization header
+export const authMiddlewareProtectedApis = async (req, res, next) => {
+  // console.log("Auto", req.headers);
+  const token = req.headers.authorization?.split(" ")[1]; // Extract token from Authorization header
 
   if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ message: "No token provided", errorCode: 401 });
   }
 
   try {
@@ -13,16 +14,16 @@ export const authMiddleware = async (req, res, next) => {
     const storedToken = await UserToken.findOne({ token });
 
     if (!storedToken) {
-      return res.status(401).json({ message: "Token not found or expired" });
+      return res.status(401).json({ message: "Unauthorized", errorCode: 401 });
     }
 
     // Verify the token using JWT
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         if (err.name === "TokenExpiredError") {
-          return res.status(401).json({ message: "Token expired" });
+          return res.status(401).json({ message: "Token expired", errorCode: 401 });
         }
-        return res.status(403).json({ message: "Failed to authenticate token" });
+        return res.status(403).json({ message: "Failed to authenticate token", errorCode: 401 });
       }
 
       // If the token is valid, attach user data to request

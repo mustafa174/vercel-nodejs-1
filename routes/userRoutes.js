@@ -2,12 +2,16 @@ import { Router } from "express";
 const router = Router();
 import userService from "../services/userService.js"; // Import user service
 import { validateRequest } from "../middlewares/validateRequest.js";
-import { authMiddleware } from "../middlewares/auth.js";
+import { authMiddlewareProtectedApis } from "../middlewares/auth.js";
 import { registerUserSchema, loginSchema } from "../validators/userValidators.js";
 import successResponse from "../utils/successResponse.js";
-import AppError from "../utils/appError.js";
+
+import { userRoleMiddleware } from "../middlewares/userAccessMiddleware.js";
+import { allowedRoles } from "../utils/constants.js";
 
 // Route to register a new user
+
+// allowed roles
 
 router.post("/register", validateRequest(registerUserSchema), async (req, res, next) => {
   try {
@@ -36,7 +40,7 @@ router.post("/login", validateRequest(loginSchema), async (req, res, next) => {
 
 // fetch all users
 
-router.get("/allusers", async (req, res, next) => {
+router.get("/allusers", authMiddlewareProtectedApis, async (req, res, next) => {
   try {
     const userResponse = await userService.findAllUsers(); // Use userService to create a user
     successResponse(res, userResponse, "success");
@@ -47,7 +51,7 @@ router.get("/allusers", async (req, res, next) => {
   }
 });
 
-router.get("/get-single-user", async (req, res, next) => {
+router.get("/get-single-user", authMiddlewareProtectedApis, async (req, res, next) => {
   try {
     const userId = req.query.id;
 
@@ -61,20 +65,8 @@ router.get("/get-single-user", async (req, res, next) => {
   }
 });
 
-router.get("/checkPro", authMiddleware, async (req, res, next) => {
-  try {
-    const updatedUser = { hi: "hi" };
-
-    res.json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-    next({
-      message: error.message,
-    });
-  }
-});
-
 // Route to update user profile
-router.put("/profile/:id", async (req, res, next) => {
+router.put("/update-profile/:id", authMiddlewareProtectedApis, async (req, res, next) => {
   try {
     const userId = req.params.id;
     const updatedUser = await userService.updateUser(userId, req.body);
@@ -87,12 +79,12 @@ router.put("/profile/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/", async (req, res, next) => {
+router.delete("/delete-user", authMiddlewareProtectedApis, userRoleMiddleware(allowedRoles), async (req, res, next) => {
   try {
     const userId = req.query.id;
-    console.log("RECEIVED>", userId);
 
-    // Call the deleteUser function
+    res.json({ message: "User deleted successfully", user: userId });
+    return;
     const deletedUser = await userService.deleteUser(userId);
 
     res.json({ message: "User deleted successfully", user: deletedUser });

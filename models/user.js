@@ -35,9 +35,15 @@ const ReviewSchema = new Schema({
 const UserSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phone_number: { type: Number, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ["customer", "admin"], default: "customer" },
+  city: { type: String, required: true, unique: true },
+  country: { type: String, required: true, unique: true },
+  postal_code: { type: Number, required: true, unique: true },
   address: { type: AddressSchema, required: false },
+  //
+  role: { type: String, enum: ["customer", "admin"], default: "customer" },
+
   profileImage: { type: String, default: null }, // URL to the profile image
   orderHistory: [OrderHistorySchema],
   cart: [CartItemSchema],

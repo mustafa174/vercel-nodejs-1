@@ -7,9 +7,11 @@ import userRoutes from "./routes/userRoutes.js";
 import { connectDB } from "./config/db.js";
 import mongoSanitize from "express-mongo-sanitize";
 import helmet from "helmet";
+import multer from "multer";
 import session from "express-session";
-
+const upload = multer({ dest: "uploads/" });
 import errorHandler from "./middlewares/errorHandler.js";
+import { connectToDatabase } from "./config/squeelizeDbConfig.js";
 // ===========================================
 const serverEnv = process.env.NODE_ENV || "dev";
 const port = process.env.PORT || 3000;
@@ -17,7 +19,9 @@ const port = process.env.PORT || 3000;
 // Middleware to parse JSON bodies
 app.use(json());
 app.use(express.json());
-connectDB();
+app.use(express.urlencoded({ extended: false }));
+// connectDB();
+connectToDatabase();
 // Use CORS middleware
 app.use(cors()); // Allows all origins by default
 
