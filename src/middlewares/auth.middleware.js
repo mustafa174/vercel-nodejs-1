@@ -1,5 +1,5 @@
 import JwtService from "../services/jwt.service";
-import {BadTokenError} from "../utils/ApiError"
+import { BadTokenError } from "../utils/ApiError";
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -13,7 +13,8 @@ const authMiddleware = async (req, res, next) => {
 
     return next();
   } catch (error) {
-    next(new BadTokenError())
+    console.log("ERORr", error);
+    next(new BadTokenError());
   }
 };
 

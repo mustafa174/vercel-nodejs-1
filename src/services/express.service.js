@@ -2,14 +2,13 @@ import express from "express";
 import fs from "fs";
 import bodyParser from "body-parser";
 import globalErrorHandler from "../middlewares/errorHandler.middleware";
+import cors from "cors";
 /*
   body-parser: Parse incoming request bodies in a middleware before your handlers, 
   available under the req.body property.
 */
 
-const routeFiles = fs
-  .readdirSync(__dirname + "/../routes/")
-  .filter((file) => file.endsWith(".js"));
+const routeFiles = fs.readdirSync(__dirname + "/../routes/").filter((file) => file.endsWith(".js"));
 
 let server;
 let routes = [];
@@ -27,10 +26,12 @@ const expressService = {
       }
 
       server = express();
+      server.use(cors());
       server.use(bodyParser.json());
       server.use(routes);
       server.use(globalErrorHandler);
       server.listen(process.env.SERVER_PORT);
+
       console.log("[EXPRESS] Express initialized");
     } catch (error) {
       console.log("[EXPRESS] Error during express service initialization");

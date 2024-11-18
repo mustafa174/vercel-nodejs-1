@@ -1,14 +1,11 @@
 import * as Yup from "yup";
 import User from "../models/User";
 import JwtService from "../services/jwt.service";
-import {
-  BadRequestError,
-  UnauthorizedError,
-  ValidationError,
-} from "../utils/ApiError";
+import { BadRequestError, UnauthorizedError, ValidationError } from "../utils/ApiError";
 
 let loginController = {
   login: async (req, res, next) => {
+    console.log("LOGIN ", req, res);
     try {
       const schema = Yup.object().shape({
         email: Yup.string().email().required(),

@@ -5,10 +5,16 @@ class User extends Model {
   static init(sequelize) {
     super.init(
       {
+        id: {
+          type: Sequelize.INTEGER,
+          primaryKey: true, // Mark this as the primary key
+          autoIncrement: true, // Automatically increment the ID for each user
+        },
         name: Sequelize.STRING,
         email: Sequelize.STRING,
         password: Sequelize.VIRTUAL, //When it is VIRTUAL it does not exist in the database
         password_hash: Sequelize.STRING,
+        phone_number: Sequelize.STRING,
       },
       {
         sequelize,
@@ -35,7 +41,6 @@ class User extends Model {
       foreignKey: "userId",
     });
   }
-
   checkPassword(password) {
     return bcrypt.compare(password, this.password_hash);
   }

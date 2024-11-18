@@ -1,37 +1,58 @@
 import * as Yup from "yup";
 import Address from "../models/Address";
 import User from "../models/User";
-import {
-  BadRequestError,
-  UnauthorizedError,
-  ValidationError,
-} from "../utils/ApiError";
+import { BadRequestError, UnauthorizedError, ValidationError, sendSuccessResponse } from "../utils/ApiError";
+import JwtService from "../services/jwt.service";
 
 //Yup is a JavaScript schema builder for value parsing and validation.
 
 let userController = {
   add: async (req, res, next) => {
     try {
+      const { email, phone_number, address } = req.body;
+
       const schema = Yup.object().shape({
         name: Yup.string().required(),
         email: Yup.string().email().required(),
-        password: Yup.string().required().min(6),
+        password: Yup.string().required().min(3),
+        phone_number: Yup.number().required().min(6),
       });
 
-      if (!(await schema.isValid(req.body))) throw new ValidationError();
+      if (!(await schema.validate(req.body, { abortEarly: false }))) {
+        throw new ValidationError("Schema not matched");
+      }
 
-      const { email } = req.body;
+      const userExists = await User.findOne({ where: { email } });
+      const userWithPhoneNumber = await User.findOne({ where: { phone_number } });
 
-      const userExists = await User.findOne({
-        where: { email },
+      if (userWithPhoneNumber) throw new BadRequestError("This phone number is already registered!");
+      if (userExists) throw new BadRequestError("This email is already registered!");
+
+      // Check if the address exists or create it
+      let addressRecord = await Address.findOne({
+        where: {
+          city: address.city,
+          address: address.address,
+          country: address.country,
+          postal_code: address.postal_code,
+        },
       });
 
-      if (userExists) throw new BadRequestError();
+      if (!addressRecord) {
+        // Create a new address if it doesn't exist
+        addressRecord = await Address.create(address);
+      }
 
+      // Create the user
       const user = await User.create(req.body);
 
-      return res.status(200).json(user);
+      // Associate the user with the address in the junction table
+      await user.addAddress(addressRecord);
+      console.log("INSTANCEC", user.addAddress);
+      console.log(typeof user.addAddress);
+      sendSuccessResponse(res, user, "User created successfully");
     } catch (error) {
+      console.log("ERROR > ", error);
       next(error);
     }
   },
@@ -69,9 +90,19 @@ let userController = {
 
   get: async (req, res, next) => {
     try {
-      const users = await User.findAll();
+      const users = await User.findAll({
+        attributes: { exclude: ["password", "password_hash"] },
+        include: [
+          {
+            model: Address,
+            through: { attributes: [] }, // Exclude the junction table attributes
+            attributes: ["city", "country", "postal_code", "address"], // Specify address fields to include
+          },
+        ],
+        // Exclude the password field
+      });
 
-      return res.status(200).json(users);
+      sendSuccessResponse(res, users, "success!");
     } catch (error) {
       next(error);
     }
@@ -80,11 +111,12 @@ let userController = {
   find: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const user = await User.findByPk(id);
+      const user = await User.findByPk(id, {
+        attributes: { exclude: ["password", "password_hash"] }, // Exclude the password field
+      });
 
       if (!user) throw new BadRequestError();
-
-      return res.status(200).json(user);
+      sendSuccessResponse(res, user, "success");
     } catch (error) {
       next(error);
     }
@@ -114,7 +146,7 @@ let userController = {
         }),
       });
 
-      if (!(await schema.isValid(req.body))) throw new ValidationError();
+      if (!(await schema.validate(req.body, { abortEarly: false }))) throw new ValidationError();
 
       const { email, oldPassword } = req.body;
 
@@ -124,16 +156,14 @@ let userController = {
         const userExists = await User.findOne({
           where: { email },
         });
-
-        if (userExists) throw new BadRequestError();
+        console.log("userExists", userExists);
+        if (!userExists) throw new BadRequestError("User not found", 404);
       }
 
-      if (oldPassword && !(await user.checkPassword(oldPassword)))
-        throw new UnauthorizedError();
+      if (oldPassword && !(await user.checkPassword(oldPassword))) throw new UnauthorizedError();
 
       const newUser = await user.update(req.body);
-
-      return res.status(200).json(newUser);
+      sendSuccessResponse(res, newUser, "User updated successfully");
     } catch (error) {
       next(error);
     }
@@ -148,6 +178,42 @@ let userController = {
       user.destroy();
 
       return res.status(200).json({ msg: "Deleted" });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  login: async (req, res, next) => {
+    try {
+      const schema = Yup.object().shape({
+        email: Yup.string().email().required(),
+        password: Yup.string().required(),
+      });
+
+      if (!(await schema.isValid(req.body))) throw new ValidationError();
+
+      let { email, password } = req.body;
+      const user = await User.findOne({
+        where: { email },
+      });
+
+      if (!user) throw new BadRequestError("User not found!", 404);
+
+      if (!(await user.checkPassword(password))) throw new UnauthorizedError("Invalid credentials", 401);
+
+      const token = JwtService.jwtSign(user.id);
+
+      return res.status(200).json({ user, token });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  logout: async (req, res, next) => {
+    try {
+      JwtService.jwtBlacklistToken(JwtService.jwtGetToken(req));
+
+      res.status(200).json({ msg: "Authorized" });
     } catch (error) {
       next(error);
     }

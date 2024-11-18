@@ -27,6 +27,10 @@ module.exports = {
         type: Sequelize.DATE,
         defaultValue: new Date(),
       },
+      phone_number: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,

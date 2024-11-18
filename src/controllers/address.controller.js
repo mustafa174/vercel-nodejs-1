@@ -7,18 +7,18 @@ let addressController = {
     try {
       const schema = Yup.object().shape({
         city: Yup.string().required(),
-        state: Yup.string().required(),
-        neighborhood: Yup.string().required(),
+        address: Yup.string().required(),
+        postal_code: Yup.string().required(),
         country: Yup.string().required(),
       });
 
-      if (!(await schema.isValid(req.body))) throw new ValidationError();
+      if (!(await schema.isValid(req.body, { abortEarly: false }))) throw new ValidationError();
 
       const addressExists = await Address.findOne({
         where: { ...req.body },
       });
 
-      if (addressExists) throw new BadRequestError();
+      if (addressExists) throw new BadRequestError("this address exists already");
 
       const address = await Address.create(req.body);
 

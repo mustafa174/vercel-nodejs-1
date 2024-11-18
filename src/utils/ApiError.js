@@ -34,6 +34,27 @@ const DEFAULT_ERRORS = {
 };
 
 /**
+ * @class SuccessResponse
+ * @param {string} message - Success message (defaults to "Success")
+ * @param {number} statusCode - HTTP status code (defaults to 200)
+ */
+class SuccessResponse {
+  constructor(message = "Success", statusCode = 200) {
+    this.isSuccess = true;
+    this.message = message;
+    this.statusCode = statusCode;
+  }
+
+  toObject() {
+    return {
+      isSuccess: this.isSuccess,
+      message: this.message,
+      statusCode: this.statusCode,
+    };
+  }
+}
+
+/**
  * @class BaseError
  * @param {number} statusCode - HTTP status code
  * @param {boolean} isOperational - Is this error operational
@@ -46,6 +67,13 @@ class BaseError extends Error {
     this.type = type;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
+  }
+  toObject() {
+    return {
+      isSuccess: false,
+      message: this.message,
+      errorCode: this.type,
+    };
   }
 }
 
@@ -62,75 +90,62 @@ class ApiError extends BaseError {
  * @param {Error} err - Error object
  * @returns {boolean} - Is this error an ApiError
  */
-export const IsApiError = (err) =>
-  err instanceof ApiError ? err.isOperational : false;
+export const IsApiError = (err) => (err instanceof ApiError ? err.isOperational : false);
 
 export class NotFoundError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.NOT_FOUND.message,
-    type = DEFAULT_ERRORS.NOT_FOUND.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.NOT_FOUND.message, type = DEFAULT_ERRORS.NOT_FOUND.code) {
     super(message, 404, type);
   }
 }
 
 export class BadRequestError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.BAD_REQUEST.message,
-    type = DEFAULT_ERRORS.BAD_REQUEST.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.BAD_REQUEST.message, type = DEFAULT_ERRORS.BAD_REQUEST.code) {
     super(message, 400, type);
   }
 }
 export class ValidationError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.VALIDATION.message,
-    type = DEFAULT_ERRORS.VALIDATION.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.VALIDATION.message, type = DEFAULT_ERRORS.VALIDATION.code) {
     super(message, 400, type);
+  }
+  toObject() {
+    return {
+      isSuccess: false,
+      message: this.message,
+      errorCode: this.type,
+    };
   }
 }
 
 export class UnauthorizedError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.UNAUTHORIZED.message,
-    type = DEFAULT_ERRORS.UNAUTHORIZED.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.UNAUTHORIZED.message, type = DEFAULT_ERRORS.UNAUTHORIZED.code) {
     super(message, 401, type);
   }
 }
 export class ForbiddenError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.FORBIDDEN.message,
-    type = DEFAULT_ERRORS.FORBIDDEN.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.FORBIDDEN.message, type = DEFAULT_ERRORS.FORBIDDEN.code) {
     super(message, 403, type);
   }
 }
 
 export class InternalServerError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.SERVER_ERROR.message,
-    type = DEFAULT_ERRORS.SERVER_ERROR.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.SERVER_ERROR.message, type = DEFAULT_ERRORS.SERVER_ERROR.code) {
     super(message, 500, type);
   }
 }
 
 export class BadTokenError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.BAD_TOKEN.message,
-    type = DEFAULT_ERRORS.BAD_TOKEN.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.BAD_TOKEN.message, type = DEFAULT_ERRORS.BAD_TOKEN.code) {
     super(message, 401, type);
   }
 }
 
 export class TokenExpiredError extends ApiError {
-  constructor(
-    message = DEFAULT_ERRORS.TOKEN_EXPIRED.message,
-    type = DEFAULT_ERRORS.TOKEN_EXPIRED.code
-  ) {
+  constructor(message = DEFAULT_ERRORS.TOKEN_EXPIRED.message, type = DEFAULT_ERRORS.TOKEN_EXPIRED.code) {
     super(message, 401, type);
   }
 }
+
+export const sendSuccessResponse = (res, data, message) => {
+  const successResponse = new SuccessResponse(message);
+  res.status(successResponse.statusCode).json({ ...successResponse.toObject(), data });
+};

@@ -5,9 +5,9 @@ class Address extends Model {
     super.init(
       {
         city: Sequelize.STRING,
-        state: Sequelize.STRING,
-        neighborhood: Sequelize.STRING,
         country: Sequelize.STRING,
+        postal_code: Sequelize.NUMBER,
+        address: Sequelize.STRING,
       },
       {
         sequelize,
