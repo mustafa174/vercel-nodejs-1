@@ -12,6 +12,7 @@ class User extends Model {
         },
         name: Sequelize.STRING,
         email: Sequelize.STRING,
+        role: Sequelize.STRING,
         password: Sequelize.VIRTUAL, //When it is VIRTUAL it does not exist in the database
         password_hash: Sequelize.STRING,
         phone_number: Sequelize.STRING,
@@ -40,6 +41,9 @@ class User extends Model {
       through: "UserAddress",
       foreignKey: "userId",
     });
+
+    // Define association with the Cart model
+    this.hasOne(models.Cart, { foreignKey: "userId", as: "cart" });
   }
   checkPassword(password) {
     return bcrypt.compare(password, this.password_hash);

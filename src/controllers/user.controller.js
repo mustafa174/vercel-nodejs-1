@@ -9,13 +9,14 @@ import JwtService from "../services/jwt.service";
 let userController = {
   add: async (req, res, next) => {
     try {
-      const { email, phone_number, address } = req.body;
+      const { email, phone_number, address, role } = req.body;
 
       const schema = Yup.object().shape({
         name: Yup.string().required(),
         email: Yup.string().email().required(),
         password: Yup.string().required().min(3),
         phone_number: Yup.number().required().min(6),
+        role: Yup.string().oneOf(["admin", "user"]).optional(), // Validate role as 'admin' or 'user'
       });
 
       if (!(await schema.validate(req.body, { abortEarly: false }))) {
@@ -48,8 +49,7 @@ let userController = {
 
       // Associate the user with the address in the junction table
       await user.addAddress(addressRecord);
-      console.log("INSTANCEC", user.addAddress);
-      console.log(typeof user.addAddress);
+
       sendSuccessResponse(res, user, "User created successfully");
     } catch (error) {
       console.log("ERROR > ", error);
@@ -144,11 +144,13 @@ let userController = {
             return field;
           }
         }),
+        role: Yup.string().oneOf(["admin", "user"]).optional(), // Validate role as 'admin' or 'user'
       });
 
+      // Validate the request body
       if (!(await schema.validate(req.body, { abortEarly: false }))) throw new ValidationError();
 
-      const { email, oldPassword } = req.body;
+      const { email, oldPassword, role } = req.body;
 
       const user = await User.findByPk(req.userId);
 
@@ -160,9 +162,16 @@ let userController = {
         if (!userExists) throw new BadRequestError("User not found", 404);
       }
 
+      // Check if the old password matches (if provided)
       if (oldPassword && !(await user.checkPassword(oldPassword))) throw new UnauthorizedError();
 
-      const newUser = await user.update(req.body);
+      // Only update the role if it is provided in the request
+      const updatedData = { ...req.body };
+      if (role) {
+        updatedData.role = role; // Ensure the role is updated
+      }
+
+      const newUser = await user.update(updatedData); // Update the user data with the role
       sendSuccessResponse(res, newUser, "User updated successfully");
     } catch (error) {
       next(error);
@@ -195,6 +204,13 @@ let userController = {
       let { email, password } = req.body;
       const user = await User.findOne({
         where: { email },
+        include: [
+          {
+            model: Address,
+            through: { attributes: [] }, // Exclude the junction table attributes
+            attributes: ["city", "country", "postal_code", "address"], // Include address fields
+          },
+        ],
       });
 
       if (!user) throw new BadRequestError("User not found!", 404);
@@ -203,7 +219,10 @@ let userController = {
 
       const token = JwtService.jwtSign(user.id);
 
-      return res.status(200).json({ user, token });
+      const { password_hash, ...safeUser } = user.toJSON();
+
+      // Send response
+      return res.status(200).json({ user: safeUser, token });
     } catch (error) {
       next(error);
     }

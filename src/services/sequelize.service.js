@@ -2,9 +2,7 @@ import { Sequelize } from "sequelize";
 import databaseConfig from "../config/database";
 import fs from "fs";
 
-const modelFiles = fs
-  .readdirSync(__dirname + "/../models/")
-  .filter((file) => file.endsWith(".js"));
+const modelFiles = fs.readdirSync(__dirname + "/../models/").filter((file) => file.endsWith(".js"));
 
 const sequelizeService = {
   init: async () => {
@@ -14,7 +12,7 @@ const sequelizeService = {
       /*
         Loading models automatically
       */
-     
+
       for (const file of modelFiles) {
         const model = await import(`../models/${file}`);
         model.default.init(connection);

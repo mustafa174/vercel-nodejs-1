@@ -27,9 +27,10 @@ const expressService = {
 
       server = express();
       server.use(cors());
-      server.use(bodyParser.json());
+      server.use(express.json()); // This is the correct middleware for parsing JSON bodies
+      server.use(bodyParser.urlencoded({ extended: true })); // Keep this if you expect form-data too
       server.use(routes);
-      server.use(globalErrorHandler);
+
       server.listen(process.env.SERVER_PORT);
 
       console.log("[EXPRESS] Express initialized");

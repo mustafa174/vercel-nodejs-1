@@ -16,15 +16,21 @@ let loginController = {
 
       let { email, password } = req.body;
 
-      const user = await User.findOne({ where: { email } });
+      const user = await User.findOne({
+        where: { email },
+        attributes: { exclude: ["password_hash"] }, // Exclude password_hash from the query result
+      });
 
       if (!user) throw new BadRequestError();
 
       if (!(await user.checkPassword(password))) throw new UnauthorizedError();
 
       const token = JwtService.jwtSign(user.id);
+      // Exclude sensitive fields from user object
+      const { password: _, ...safeUser } = user.toJSON(); // Use `toJSON` to work with plain object
 
-      return res.status(200).json({ user, token });
+      // Send response
+      return res.status(200).json({ user: safeUser, token });
     } catch (error) {
       next(error);
     }

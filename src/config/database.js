@@ -1,4 +1,4 @@
-require('dotenv/config');
+require("dotenv/config");
 
 module.exports = {
   dialect: process.env.DB_DIALECT,
@@ -6,8 +6,14 @@ module.exports = {
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   define: {
-    timestamps: true
+    timestamps: true,
+  },
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Add this for rejecting unauthorized certificates
+    },
   },
 };
-

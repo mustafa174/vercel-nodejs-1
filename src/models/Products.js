@@ -36,7 +36,25 @@ class Product extends Model {
           type: Sequelize.BOOLEAN,
           defaultValue: true,
         },
+        category: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
+        target_audience: {
+          type: Sequelize.ENUM("men", "women", "unisex"),
+          allowNull: true,
+        },
+        badge: {
+          type: Sequelize.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+        },
+        color: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
       },
+
       {
         sequelize,
         modelName: "Product",
