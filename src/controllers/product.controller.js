@@ -41,9 +41,8 @@ const productController = {
         });
       }
       // Extract fields from the request
-      const { name, price, description, status, rating, availability, category, target_audience, badge, color } = body;
+      const { name, price, description, status, rating, availability, category, target_audience, badge, color, brand } = body;
       const file = body.file;
-      console.log("imageUr > ***>>>l", body);
 
       let imageUrl = null;
       if (file) {
@@ -64,6 +63,7 @@ const productController = {
         badge,
         color,
         target_audience,
+        brand,
       });
 
       sendSuccessResponse(res, newProduct, "Product added successfully!");
@@ -75,7 +75,7 @@ const productController = {
   list: async (req, res, next) => {
     try {
       // Extract filter parameters from query
-      const { name, price, description, status, rating, availability, category, target_audience } = req.query;
+      const { name, price, description, status, rating, availability, category, target_audience, latest, brand } = req.query;
 
       // Construct the filter object for Sequelize query
       const filters = {};
@@ -104,6 +104,9 @@ const productController = {
       if (status) {
         filters.status = status; // Exact match for status
       }
+      if (brand) {
+        filters.brand = brand; // Exact match for status
+      }
 
       // Filter by rating (exact match)
       if (rating) {
@@ -124,13 +127,29 @@ const productController = {
       if (target_audience) {
         filters.for = target_audience;
       }
-      // Query the database for products with applied filters
-      const products = await Product.findAll({
-        where: filters, // Apply filters dynamically
-      });
+
+      let responseData;
+
+      // If 'latest' query parameter is passed, fetch the latest object
+      if (latest === "true") {
+        responseData = await Product.findOne({
+          where: filters,
+          order: [["updatedAt", "DESC"]], // Order by updatedAt in descending order
+        });
+
+        // If no product found, return an empty response
+        if (!responseData) {
+          return sendSuccessResponse(res, {}, "No product found");
+        }
+      } else {
+        // Query the database for products with applied filters
+        responseData = await Product.findAll({
+          where: filters, // Apply filters dynamically
+        });
+      }
 
       // Send the response with the filtered products
-      sendSuccessResponse(res, products, "Products retrieved successfully!");
+      sendSuccessResponse(res, responseData, "Products retrieved successfully!");
     } catch (error) {
       next(error); // Pass error to the global error handler
     }
@@ -176,7 +195,7 @@ const productController = {
       if (!(await schema.validate(body, { abortEarly: false }))) throw new ValidationError();
 
       // Extract fields from the request
-      const { name, price, description, status, rating, availability, category, target_audience, badge, color } = body;
+      const { name, price, description, status, rating, availability, category, target_audience, badge, color, brand } = body;
       const file = body.file; // Image file uploaded through multer
 
       const product = await Product.findByPk(id);
@@ -189,7 +208,6 @@ const productController = {
       if (file) {
         // Upload the new image to Cloudinary (or other cloud service)
         imageUrl = await cloudinaryService.uploadImage(file.path, { folder: "products" });
-        console.log("Uploaded Image URL:", imageUrl);
       }
 
       // Update the product with new or existing image
@@ -205,6 +223,7 @@ const productController = {
         target_audience,
         badge,
         color,
+        brand,
       });
 
       // Send success response

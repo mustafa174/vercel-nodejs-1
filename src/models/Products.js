@@ -40,6 +40,10 @@ class Product extends Model {
           type: Sequelize.STRING,
           allowNull: true,
         },
+        brand: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
         target_audience: {
           type: Sequelize.ENUM("men", "women", "unisex"),
           allowNull: true,
@@ -52,6 +56,17 @@ class Product extends Model {
         color: {
           type: Sequelize.STRING,
           allowNull: true,
+        },
+        // Ensure createdAt is explicitly defined
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.NOW,
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.NOW,
         },
       },
 
