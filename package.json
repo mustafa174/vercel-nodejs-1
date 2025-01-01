@@ -27,7 +27,8 @@
     "sequelize": "^6.28.2",
     "stripe": "^17.5.0",
     "uuid": "^9.0.0",
-    "yup": "^1.0.0"
+    "yup": "^1.0.0",
+    "vercel": "^37.4.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.18",
