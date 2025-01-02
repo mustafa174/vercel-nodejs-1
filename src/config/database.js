@@ -1,12 +1,13 @@
 require("dotenv/config");
 
 module.exports = {
-  dialect: process.env.DB_DIALECT,
-  host: process.env.DB_HOST,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  dialect: postgres,
+  host: pg-89258fa-mustafa-3020.c.aivencloud.com,
+  username: avnadmin,
+  password: AVNS_39S3BW_qe2LB0xWT3vG,
+  database: glambeautyData,
+  port:glambeautyData,
+  DB_SSL:true,
   define: {
     timestamps: true,
   },
