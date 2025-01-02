@@ -33,6 +33,7 @@
   "devDependencies": {
     "nodemon": "^2.0.18",
     "sequelize-cli": "^6.4.1",
-    "sucrase": "^3.23.0"
+    "sucrase": "^3.23.0",
+     "pg": "^8.13.1",
   }
 }
